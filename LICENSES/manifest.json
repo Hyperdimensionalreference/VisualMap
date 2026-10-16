@@ -1,0 +1,21 @@
+{
+  "scope": "source repository notices only",
+  "files": [
+    {
+      "path": "LICENSES/CLIP-MIT.txt",
+      "sha256": "987e63b32f6c89ff5160e429458a872ff048e6860b590a3912e938f9da8f14db"
+    },
+    {
+      "path": "LICENSES/Geist-OFL-1.1.txt",
+      "sha256": "c683bfbcc7e087f5d37a54ef628f10387c451a83ddc459b151403a164ac46c90"
+    },
+    {
+      "path": "LICENSES/GroundingDINO-Apache-2.0.txt",
+      "sha256": "b403c98ec1ffaccb0124632592a3d99642cddc3031ca412b402568e6c06c202a"
+    },
+    {
+      "path": "LICENSES/YOLOX-Apache-2.0.txt",
+      "sha256": "0ec3668d3274bcf29e8a29e9576d5a2cd96fc78d3c5bec4387355a796e5d9088"
+    }
+  ]
+}

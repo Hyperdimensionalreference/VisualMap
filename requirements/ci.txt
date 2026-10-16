@@ -1,0 +1,6 @@
+# Reproduced direct versions; no model or external API needed in CI.
+numpy==2.5.3
+opencv-python==5.0.0.93
+PyYAML==6.0.3
+pytest==9.1.1
+ruff==0.16.9

@@ -1,0 +1,13 @@
+[
+  {"prompt": "wireless earphones charging case", "class_name": "earbud case"},
+  {"prompt": "fitness tracker", "class_name": "fitness tracker"},
+  {"prompt": "watch", "class_name": "watch"},
+  {"prompt": "smartwatch", "class_name": "watch"},
+  {"prompt": "earphones case", "class_name": "earbud case"},
+  {"prompt": "tablet", "class_name": "tablet"},
+  {"prompt": "charger", "class_name": "power adapter"},
+  {"prompt": "power strip", "class_name": "power strip"},
+  {"prompt": "computer monitor", "class_name": "monitor"},
+  {"prompt": "lamp", "class_name": "lamp"},
+  {"prompt": "bottle", "class_name": "bottle"}
+]

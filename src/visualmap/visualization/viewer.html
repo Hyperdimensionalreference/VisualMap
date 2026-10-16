@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VisualMap · 空间关系检查</title><style>__STYLE__</style></head>
+<body><div class="app">
+<header class="masthead"><div><div class="eyebrow">VISUALMAP / SPATIAL WORKSPACE</div>
+<h1 id="title">视频中的空间关系</h1><p class="sub">从视频观测到三维候选，逐帧核对物体的位置关系。</p></div>
+<div class="header-actions"><div class="status" id="detectorStatus">正在读取结果</div>
+<button id="commandBtn" class="command-trigger" type="button">快捷操作 <kbd>Ctrl K</kbd></button>
+<a id="newVideoBtn" class="new-video" href="http://127.0.0.1:8765/" target="_blank" rel="noopener">选择新视频 <span aria-hidden="true">↗</span></a></div></header>
+<div class="alert" id="alert" role="status" hidden></div>
+<div class="chips" id="chips"></div>
+<main class="workspace">
+<section class="stage"><div class="stage-heading"><div><span class="eyebrow">01 / SPACE</span><h2>三维候选场景</h2></div>
+<div class="view-tabs" role="group" aria-label="空间视角">
+<button id="perspectiveBtn" class="active">立体</button><button id="topBtn">顶视 X/Z</button>
+<button id="frontBtn">正视 X/Y</button><button id="sideBtn">侧视 Z/Y</button><button id="cameraBtn">镜头视角</button></div></div>
+<div class="viewport"><canvas id="view" tabindex="0" aria-label="三维场景。左键旋转，右键或中键平移，滚轮围绕画面中心缩放，点击百分比回到原大小，F 聚焦选中物体。"></canvas>
+<div class="hud"><div class="pill" id="poseHud">读取场景…</div><div class="pill" id="viewHud">三维透视</div></div>
+<div class="stage-label"><span>左键 旋转</span><span>右键 / 中键 平移</span><span>滚轮 中心缩放</span><span><kbd>F</kbd> 聚焦</span></div>
+<div class="scene-empty" id="sceneEmpty" hidden></div></div>
+<div class="controls"><button class="primary" id="playBtn">▶ 播放</button>
+<button id="fitBtn">全景</button><button id="objectsBtn">聚焦物体</button>
+<button id="focusBtn" title="聚焦选中物体（F）">聚焦选中 <kbd>F</kbd></button>
+<button id="followBtn">跟随相机</button><button id="resetBtn">复位视图</button></div>
+<div class="view-adjustments"><div class="zoom-controls"><span>大小</span>
+<button id="zoomOut" type="button" aria-label="缩小场景">−</button>
+<input id="zoomRange" type="range" min="0" max="1000" value="500" aria-label="调整场景大小">
+<button id="zoomIn" type="button" aria-label="放大场景">＋</button>
+<button id="zoomReset" type="button" title="恢复此视角的原大小，保留位置和角度">100%</button></div>
+<div class="angle-controls"><span>角度微调</span>
+<button id="rotateLeft" type="button" aria-label="向左旋转15度">←</button>
+<button id="rotateRight" type="button" aria-label="向右旋转15度">→</button>
+<button id="rotateUp" type="button" aria-label="向上旋转10度">↑</button>
+<button id="rotateDown" type="button" aria-label="向下旋转10度">↓</button></div></div>
+<div class="timeline-row"><span class="timeline-caption">视频时间轴</span><input type="range" id="seek" min="0" max="1000" value="0" aria-label="视频时间轴"><span class="time" id="timeLabel">0.0 s</span></div>
+<div id="trackingCoverage" class="tracking-coverage" aria-label="三维定位覆盖"></div>
+<div id="trackingNotice" class="tracking-notice" role="status" aria-live="polite"></div>
+<div class="legend"><span><i class="path"></i>相机轨迹</span><span><i class="point"></i>场景点</span>
+<span><i class="camera"></i>镜头朝向</span><span><i class="object"></i>物体定位候选</span>
+<span><i class="volume"></i>灰块 · 估计占用</span><span><i class="uncertainty"></i>选中位置散布</span><span id="gridLabel">参考网格 · 非地面</span></div>
+<section class="relation-panel"><div class="panel-head"><h2>空间关系核对</h2><small>地图单位 · 未标定尺度</small></div>
+<label class="relation-basis" for="relationBasis">方向参照<select id="relationBasis" aria-label="关系方向参照">
+<option value="current" selected>当前镜头方向</option><option value="world">首帧世界轴</option></select></label>
+<div class="pair-select"><label>物体 A<select id="objectA" aria-label="物体 A"></select></label>
+<span class="pair-arrow">→</span><label>物体 B<select id="objectB" aria-label="物体 B"></select></label>
+<button id="pairBtn">聚焦这组物体</button></div>
+<div id="relationReadout" class="relation-readout" aria-live="polite"></div></section>
+<section class="relation-panel occupancy-panel"><div class="panel-head"><h2>体积与碰撞预估</h2>
+<a class="occupancy-export" href="occupancy.json" download>导出占用数据 ↗</a></div>
+<label class="occupancy-margin">每个物体预留间隙<input id="occupancyMargin" type="number" min="0" step="0.1" value="0" aria-label="每个物体预留间隙">units</label>
+<div id="occupancyReadout" aria-live="polite"></div>
+<p class="micro">选择上方物体 A / B 比较灰块。灰块为视频推估的包围体，未观测厚度与完整边界仍待核对。</p></section></section>
+<aside class="sidebar">
+<section class="panel" id="videoPanel" hidden><div class="panel-head"><h2>02 / 视频对照</h2><small id="videoTime">等待加载</small><button id="llmVideoExpand" class="llm-link" type="button">放大选图 ↗</button></div>
+<div class="video-shell"><video id="sourceVideo" controls playsinline preload="metadata"></video><canvas id="videoOverlay"></canvas></div>
+<div id="llmExpandedTools" class="llm-expanded-tools" hidden><span id="llmExpandedCount">已选 0 / 3 张</span><button id="llmExpandedCapture" type="button">框选此刻</button><button id="llmVideoCollapse" type="button">完成选图 · 返回</button></div>
+<p class="micro">与场景使用同一视频时刻。选择只高亮；回看和聚焦分别操作。</p><button id="llmStart" class="llm-start" type="button">＋ 框选物体 · 大模型辨认</button></section>
+<section class="panel llm-panel" id="llmPanel" hidden aria-labelledby="llmPanelTitle"><div class="panel-head"><h2 id="llmPanelTitle">三张图，辨认同一物体</h2><button id="llmSettingsOpen" type="button" class="llm-link">API 设置</button></div>
+<p class="micro">暂停视频，拖动时间轴，在三个不同时刻框选同一物体。只发送你选取的局部图片。</p>
+<label class="llm-field">更新哪一个物体<select id="llmTarget" aria-label="关联已有物体或补充漏检物体"></select></label>
+<div class="llm-evidence" id="llmEvidence" aria-label="三张待发送的局部图"></div>
+<div class="llm-capture-actions"><button id="llmCapture" type="button">框选当前画面</button><button id="llmReset" type="button" class="llm-link">清空选图</button></div>
+<p class="micro llm-capture-hint" id="llmCaptureHint" role="status">每次只框选一个物体，尽量保留完整边界。</p>
+<label class="llm-field">补充问题（可选）<textarea id="llmQuestion" maxlength="600" rows="2" placeholder="例如：这是耳机盒还是其他设备？"></textarea></label>
+<div class="llm-destination" id="llmDestination">读取 API 设置后显示发送目的地。</div><button id="llmSubmit" class="primary llm-send" type="button" disabled>发送三张图，手动辨认</button>
+<p id="llmStatus" class="llm-status" role="status" aria-live="polite"></p>
+<div id="llmResponse" class="llm-response" hidden><span class="eyebrow">MODEL SUGGESTION</span><strong id="llmSuggestedName"></strong><p id="llmReason"></p><p id="llmUncertainty"></p><div id="llmCandidates"></div><div id="llmSameObjectWarning" class="llm-same-object-warning" hidden><b>这三张图可能不是同一个物体。</b><p>大模型提示图中目标不一致。请先核对三个时刻；可以清空重选，或在你确定是同一物体后明确确认。</p><label><input id="llmSameObjectAck" type="checkbox">我已逐一核对，确认三张图是同一物体，仍采用此名称。</label></div><label class="llm-field">核对后保存的物体名称<input id="llmConfirmedName" maxlength="80" placeholder="可采用建议名称，也可自行修改"></label><button id="llmConfirm" class="primary" type="button">确认名称并更新结果</button><p class="micro">保存到本项目的物体知识库，更新当前结果的名称；原始模型类别和三维数据保留。</p></div>
+<div class="llm-labels" id="llmLabels" aria-label="已确认的大模型辅助记录"></div></section>
+<section class="panel" id="detailsPanel"><div class="panel-head"><h2>候选与证据</h2><small id="selectedTag">选择一个物体</small></div>
+<div id="objectDetails" class="detail-content">点选场景标记或下方清单，查看坐标、类别一致性与定位依据。</div>
+<div class="review-actions"><button id="reviewClassBtn" type="button" disabled>修正显示类别</button><button id="exportCorrectionsBtn" type="button">导出人工核对</button></div></section>
+<section class="panel"><div class="panel-head"><h2>识别记录</h2><small id="objectCount"></small></div>
+<select id="classFilter" class="filter-select" aria-label="按类别查看物体"></select>
+<label class="candidate-toggle"><input id="showCandidates" type="checkbox">显示扩展类别候选（需核对） <span id="candidateCount"></span></label>
+<div class="object-list" id="objectList"></div></section>
+<section class="panel"><div class="panel-head"><h2>空间概览</h2><small>X / Z</small></div><canvas id="plan" aria-label="顶视概览"></canvas>
+<div class="layer-list"><label><input id="layerTrajectory" type="checkbox" checked>轨迹</label>
+<label><input id="layerPoints" type="checkbox" checked>场景点</label><label><input id="layerObjects" type="checkbox" checked>物体</label><label><input id="layerVolumes" type="checkbox" checked>占用灰块</label>
+<label><input id="layerGrid" type="checkbox" checked>网格</label><label><input id="layerUncertainty" type="checkbox" checked>位置散布</label>
+<label><input id="timeScope" type="checkbox">只看当前帧</label></div>
+<button id="evidenceFrameBtn" class="evidence-jump">跳到空间证据较完整的画面</button></section>
+<section class="panel notice" id="qualityNotice"></section>
+</aside></main>
+<footer class="help">空间单位为 map units，尺度尚未标定。世界轴沿首帧相机：X 向右、Y 向下、Z 向前；上下不是重力方向。
+网格只是空间参考。灰块是尚未核实完整边界的估计占用体，体积单位为 units³；空间散布不含相机误差，未交叠不能作为安全通行结论。</footer>
+</div>
+<div id="motionFeedback" aria-hidden="true"><div id="motionSurface"><span id="motionContent"></span></div></div>
+<dialog id="commandDialog" class="command-dialog" aria-labelledby="commandTitle"><div class="dialog-head"><h2 id="commandTitle">快捷操作</h2><button id="commandClose" type="button" aria-label="关闭快捷操作">×</button></div>
+<input id="commandSearch" type="search" placeholder="搜索视角、聚焦、播放、图层…" aria-label="搜索快捷操作"><div id="commandResults" class="command-results"></div><p class="micro">1–5 切换视角 · F 聚焦 · 双击物体聚焦 · Esc 关闭</p></dialog>
+<dialog id="classDialog" class="class-dialog" aria-labelledby="classTitle"><div class="dialog-head"><h2 id="classTitle">人工核对类别</h2><button id="classCancel" type="button" aria-label="关闭类别核对">×</button></div>
+<p class="micro">只修正此跟踪记录的显示名称。模型输出与三维证据会保留；人工意见单独保存。</p>
+<label class="class-edit-label" for="classEdit">核对后的类别<input id="classEdit" maxlength="40" placeholder="例如：平板电脑、洞洞板、瓶子"></label><button id="classSave" class="primary" type="button">保存人工核对</button></dialog>
+<dialog id="llmSettingsDialog" class="llm-settings-dialog" aria-labelledby="llmSettingsTitle"><div class="dialog-head"><h2 id="llmSettingsTitle">大模型 API 设置</h2><button id="llmSettingsClose" type="button" aria-label="关闭大模型设置">×</button></div><p class="micro">填写兼容 OpenAI 图片对话格式的 API。只在你点击“发送三张图”后调用；选取的局部图会发送到你填写的地址。</p><form id="llmSettingsForm" autocomplete="off"><label class="llm-field">API 基础地址<input id="llmBaseURL" type="url" required placeholder="https://api.example.com/v1" autocomplete="off" spellcheck="false"></label><label class="llm-field">支持图片输入的模型<input id="llmModel" required maxlength="160" placeholder="视觉模型名称" autocomplete="off" spellcheck="false"></label><label class="llm-field">API Key<input id="llmAPIKey" type="password" placeholder="未配置密钥" autocomplete="new-password" spellcheck="false"></label><label class="llm-field">密钥保存方式<select id="llmKeyStorage"><option value="session">仅本次服务运行期间使用</option><option value="protected">使用 Windows 加密保存到本机</option></select></label><p id="llmKeyStatus" class="micro"></p><div class="llm-settings-actions"><button id="llmSettingsSave" class="primary" type="submit">保存设置</button><button id="llmSettingsClear" type="button">清除 API Key</button></div><p id="llmSettingsStatus" class="llm-status" role="status" aria-live="polite"></p></form></dialog>
+<script>const DATA = __DATA__;
+__SCRIPT__</script></body></html>

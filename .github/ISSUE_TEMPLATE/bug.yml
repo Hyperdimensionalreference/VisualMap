@@ -1,0 +1,20 @@
+name: 问题反馈
+description: 使用合成或已脱敏信息说明问题；安全漏洞请使用私密渠道。
+body:
+  - type: markdown
+    attributes:
+      value: 不要上传真实 API Key、私人视频、原始结果目录、电脑用户名或邮箱。安全漏洞请查看 SECURITY.md。
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤与预期/实际结果
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本、系统和 Python 版本（不含用户名或完整路径）
+  - type: textarea
+    id: logs
+    attributes:
+      label: 已脱敏的最小日志（可选）

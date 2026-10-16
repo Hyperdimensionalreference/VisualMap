@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "visualmap"
+version = "0.1.0"
+description = "Monocular visual SLAM: camera trajectory + sparse 3D map from ordinary video"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT AND Apache-2.0 AND OFL-1.1"
+license-files = ["LICENSE", "LICENSES/*.txt", "THIRD_PARTY_NOTICES.md"]
+authors = [{ name = "VisualMap Team" }]
+keywords = ["slam", "visual-odometry", "computer-vision", "3d-mapping"]
+dependencies = [
+    "numpy>=1.24",
+    "opencv-python>=4.8",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+viz = ["open3d>=0.17"]
+recognition = ["onnxruntime>=1.20", "tokenizers>=0.21"]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+visualmap = "visualmap.app:main"
+visualmap-workspace = "visualmap.web_app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"visualmap.visualization" = ["viewer.html", "viewer.css", "viewer.js", "viewer_motion.js", "viewer_occupancy.js", "upload.html", "workspace.css", "workspace.js", "fonts/*.woff2", "fonts/OFL.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

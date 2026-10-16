@@ -1,0 +1,107 @@
+video:
+  path: sample_data/sample.avi
+  every_n_frames: 1
+camera:
+  default_focal_ratio: 1.2
+slam:
+  backend: opencv_sfm
+  vo:
+    n_features: 1800
+    tracking_max_dimension: 960
+    min_inliers: 20
+    bootstrap_min_landmarks: 60
+    bootstrap_min_parallax_deg: 1.2
+    pnp_reprojection_px: 3.0
+    klt_fb_threshold_px: 1.0
+    max_map_points: 8000
+    recovery_submaps: true
+    submap_after_lost_frames: 30
+    relocalization_keyframes: 8
+depth:
+  enabled: true
+  estimator: sparse_depth
+  max_frames: 12
+  downsample: 2
+  fill_radius: 8
+detection:
+  enabled: true
+  detector: yolox_onnx
+  pegboard_refinement: true
+  pegboard_config:
+    min_holes: 45
+    min_rows: 6
+    min_columns: 5
+    min_seed_holes: 25
+  model_path: models/object_detection_yolox_2022nov.onnx
+  conf_threshold: 0.4
+  nms_threshold: 0.45
+  min_track_hits: 3
+  open_vocabulary:
+    enabled: true
+    type: grounding_dino_onnx
+    model_path: models/open_vocabulary/groundingdino_swint_ogc_quant.onnx
+    tokenizer_path: models/open_vocabulary/bert_tokenizer.json
+    prompts_path: configs/grounding_prompts.json
+    manifest_path: models/open_vocabulary/grounding_assets.json
+    runtime_path: null
+    input_width: 1200
+    input_height: 800
+    conf_threshold: 0.24
+    text_threshold: 0.2
+    nms_threshold: 0.45
+    intra_op_threads: 2
+    every_n_frames: 30
+    crop_verifier:
+      enabled: true
+      model_path: models/open_vocabulary/clip_vision_quantized.onnx
+      vocabulary_path: models/open_vocabulary/crop_vocabulary.json
+      runtime_path: null
+      allowed_classes:
+      - earbud case
+      - watch
+      - tablet
+      - monitor
+      - lamp
+      - power adapter
+      - power strip
+      min_similarity: 0.25
+      min_margin: 0.003
+      intra_op_threads: 2
+  input_width: 640
+  input_height: 640
+  tracker:
+    max_age: 75
+    class_vote_window: 8
+    class_switch_hits: 3
+    class_mismatch_iou: 0.65
+    duplicate_iou: 0.85
+    ambiguity_groups:
+    - - bottle
+      - cup
+    - - laptop
+      - tv
+    - - watch
+      - fitness tracker
+  lift:
+    center_frac: 0.65
+    min_sparse_points: 3
+    allow_projected_points: false
+    max_depth_relative_spread: 0.35
+  min_multiview_observations: 3
+  min_multiview_parallax_deg: 1.5
+  max_multiview_reprojection_px: 12.0
+  max_center_surface_depth_ratio: 0.35
+  occupancy_thickness_ratio: 0.5
+  occupancy_multiview_enabled: true
+  occupancy_multiview_max_views: 6
+  occupancy_multiview_min_angle_deg: 2.0
+  occupancy_multiview_bbox_margin: 0.08
+  fusion_window: 12
+  max_position_jump_ratio: 0.5
+  max_position_history: 1000
+  reprojection_box_margin: 0.15
+output:
+  dir: outputs
+  copy_source_video: true
+  save_reconstruction: true
+run_name: null

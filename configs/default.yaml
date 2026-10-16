@@ -1,0 +1,58 @@
+video:
+  path: sample_data/sample.avi
+  start_frame: 0
+  max_frames: null
+  every_n_frames: 1
+camera:
+  intrinsics_file: configs/camera/example_camera.yaml
+  default_focal_ratio: 1.2
+slam:
+  backend: opencv_vo
+  vo:
+    n_features: 1500
+    match_ratio: 0.75
+    min_matches: 30
+    ransac_thresh_px: 1.0
+    default_translation_norm: 1.0
+    min_inliers: 20
+    max_map_points: 8000
+    kf_min_frames_between: 3
+    kf_min_translation: 0.35
+    kf_min_rotation_deg: 8.0
+    kf_min_matches: 40
+    tri_min_parallax_deg: 1.0
+    tri_max_reproj_error_px: 3.0
+    tri_min_depth: 0.1
+    tri_max_depth: 200.0
+depth:
+  enabled: true
+  estimator: sparse_depth
+  downsample: 2
+  max_frames: 12
+  fill_radius: 8
+detection:
+  enabled: true
+  detector: demo
+  model_path: null
+  conf_threshold: 0.35
+  nms_threshold: 0.45
+  max_objects: 200
+  min_track_hits: 1
+  input_width: 640
+  input_height: 640
+  tracker: {}
+  lift:
+    min_sparse_points: 3
+    allow_projected_points: false
+  fusion_window: 12
+output:
+  dir: outputs
+  save_trajectory_csv: true
+  save_trajectory_txt: true
+  save_map_ply: true
+  save_report_json: true
+  save_depth: true
+  visualize: false
+  copy_source_video: false
+log_level: INFO
+run_name: null

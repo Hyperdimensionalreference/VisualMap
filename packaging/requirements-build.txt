@@ -1,0 +1,9 @@
+# Build in a clean Windows x64 CPython 3.13.7 virtual environment.
+PyInstaller==6.22.3
+pyinstaller-hooks-contrib==2026.8
+numpy==2.5.3
+opencv-python==5.0.0.93
+PyYAML==6.0.3
+# Exact validated CPU runtime wheels are also staged from the licensed vendor cache:
+onnxruntime==1.31.0
+tokenizers==0.23.3

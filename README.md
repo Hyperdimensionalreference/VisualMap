@@ -17,6 +17,8 @@ A local-first monocular video workspace for sparse reconstruction, object eviden
 
 ## 快速开始
 
+**Windows 安装使用**：从 [Release 下载公开测试版安装包](https://github.com/Hyperdimensionalreference/VisualMap/releases/tag/v0.1.0)，无需另装 Python，已含 YOLOX 离线模型。完整步骤见 [安装与使用说明](docs/WINDOWS_GUIDE.md)。本版未代码签名，不内置 GroundingDINO / CLIP 扩展权重；源码使用方法如下。
+
 推荐 Python 3.13、Windows 10/11 x64。当前回归主要在 Windows 验证；其他平台及 Python 版本未逐一验收。
 
 ```powershell
@@ -61,6 +63,6 @@ CI 使用固定提交的 GitHub Actions、只读仓库权限和无凭据 checkou
 
 VisualMap 自有代码采用 [MIT](LICENSE)。字体及参考接口保留各自归属和原许可，见 [第三方说明](THIRD_PARTY_NOTICES.md) 与 `LICENSES/`。
 依赖、模型、视频、音乐及数据集不是因为本项目 MIT 就自动变成 MIT；不得擅自转发他人素材。
-本次公开内容是源码，未附作者个人视频、结果、密钥、电脑路径、日志、临时诊断 EXE、模型二进制或旧安装器。之后发布安装器前必须按 [发布检查](docs/RELEASE_CHECKLIST.md) 重新核查实际载荷与对应源码义务。
+Git 源码不含作者个人视频、结果、密钥、电脑路径、日志、临时诊断 EXE 或模型二进制。Windows 公开测试安装包单独放在 Release，按公开配置构建，不上传历史三模型安装器；内含第三方许可和必要源码。[构建说明](packaging/BUILDING.md) 和 [发布检查](docs/RELEASE_CHECKLIST.md) 分别记录实际载荷与后续复核要求。
 
 发现漏洞请按 [安全政策](SECURITY.md) 私下报告；普通问题请先移除密钥、视频画面、个人路径及其他身份信息。贡献约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。

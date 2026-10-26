@@ -224,16 +224,34 @@ def self_check(directory: Path | None = None) -> dict:
     config = resources / "configs/spatial_consistent.yaml"
     errors = []
     files = {}
+    optional_runtime = False
     try:
+        import yaml
+
+        settings = yaml.safe_load(config.read_text(encoding="utf-8")) or {}
+        detection = settings.get("detection", {})
+        detection_enabled = detection.get("enabled", True)
+        expanded = detection.get("open_vocabulary", {})
+        expanded_enabled = detection_enabled and expanded.get("enabled", False)
+        verifier_enabled = expanded_enabled and expanded.get("crop_verifier", {}).get(
+            "enabled", False
+        )
+        optional_runtime = bool(expanded_enabled)
         inputs = resource_path_overrides(config, resources)
         for name, filename in inputs.items():
+            if name.startswith("detection.") and not detection_enabled:
+                continue
+            if name.startswith("detection.open_vocabulary.") and not expanded_enabled:
+                continue
+            if name.startswith("detection.open_vocabulary.crop_verifier.") and not verifier_enabled:
+                continue
             if not name.endswith("runtime_path"):
                 files[name] = Path(filename).is_file()
         # Source mode can use the explicitly configured isolated runtime as well.
         runtime = inputs.get("detection.open_vocabulary.runtime_path")
-        if runtime and Path(runtime).is_dir() and runtime not in sys.path:
+        if expanded_enabled and runtime and Path(runtime).is_dir() and runtime not in sys.path:
             sys.path.insert(0, runtime)
-    except (OSError, ValueError) as exc:
+    except (OSError, ValueError, TypeError, AttributeError) as exc:
         errors.append(type(exc).__name__ + ": bundled config is unavailable or invalid")
     assets = Path(__file__).parent / "visualization"
     for name in (
@@ -249,7 +267,10 @@ def self_check(directory: Path | None = None) -> dict:
     ):
         files["visualization/" + name] = (assets / name).is_file()
     versions = {}
-    for name in ("numpy", "cv2", "yaml", "onnxruntime", "tokenizers"):
+    modules = ["numpy", "cv2", "yaml"]
+    if is_frozen() or optional_runtime:
+        modules.extend(("onnxruntime", "tokenizers"))
+    for name in modules:
         try:
             module = importlib.import_module(name)
             versions[name] = getattr(module, "__version__", "available")

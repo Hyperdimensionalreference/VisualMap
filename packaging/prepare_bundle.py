@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import runpy
 import shutil
 import struct
 from pathlib import Path
@@ -13,6 +14,30 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 RESOURCES = ROOT / "work/windows/resources"
 MODELS = ["object_detection_yolox_2022nov.onnx"]
+
+
+def validate_inputs():
+    """Reject changed weights and leftover assets before modifying the staging tree."""
+    download = runpy.run_path(str(ROOT / "scripts/download_yolox.py"))
+    source = ROOT / "models" / MODELS[0]
+    if (
+        source.is_symlink()
+        or not source.is_file()
+        or source.stat().st_size != download["SIZE"]
+        or hashlib.sha256(source.read_bytes()).hexdigest() != download["SHA256"]
+    ):
+        raise ValueError("YOLOX model failed the published size/SHA-256 check")
+    allowed = {"configs/spatial_consistent.yaml", "configs/grounding_prompts.json"}
+    allowed.update("models/" + name for name in MODELS)
+    if RESOURCES.is_symlink() or not RESOURCES.resolve().is_relative_to(
+        (ROOT / "work/windows").resolve()
+    ):
+        raise ValueError("Resource staging must remain inside the build directory")
+    for path in RESOURCES.rglob("*"):
+        if path.is_symlink() or (
+            path.is_file() and path.relative_to(RESOURCES).as_posix() not in allowed
+        ):
+            raise ValueError("Unexpected staged asset; use a fresh build directory")
 
 
 def icon():
@@ -69,6 +94,7 @@ def icon():
 
 
 def main():
+    validate_inputs()
     (ROOT / "packaging/DISTRIBUTION_LICENSE.txt").write_text(
         "VisualMap 与第三方组件的许可范围\n\n"
         "VisualMap 自有程序源代码采用下方 MIT 许可。本安装包还包含独立的第三方组件，"

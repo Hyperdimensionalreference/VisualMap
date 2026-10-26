@@ -152,6 +152,51 @@ def test_read_only_windowed_commands_do_not_create_logs(tmp_path, monkeypatch):
     assert not directory.exists()
 
 
+@pytest.mark.parametrize("expanded_enabled", [False, True])
+def test_source_self_check_only_requires_enabled_extensions(
+    tmp_path, monkeypatch, expanded_enabled
+):
+    import importlib
+
+    config = tmp_path / "configs/spatial_consistent.yaml"
+    config.parent.mkdir()
+    model = tmp_path / "models/yolox.onnx"
+    model.parent.mkdir()
+    model.write_bytes(b"model placeholder")
+    config.write_text(yaml.safe_dump({"detection": {
+        "enabled": True, "model_path": "models/yolox.onnx",
+        "open_vocabulary": {"enabled": expanded_enabled, "model_path": "models/expanded.onnx",
+                            "crop_verifier": {"enabled": False, "model_path": "models/crop.onnx"}},
+    }}), encoding="utf-8")
+    monkeypatch.setattr(runtime, "resource_root", lambda: tmp_path)
+    monkeypatch.setattr(runtime, "is_frozen", lambda: False)
+    original = importlib.import_module
+
+    def without_optional(name):
+        if name in {"onnxruntime", "tokenizers"}:
+            raise ImportError("optional runtime not installed")
+        return original(name)
+
+    monkeypatch.setattr(importlib, "import_module", without_optional)
+    data = tmp_path / "private-data"
+    report = runtime.self_check(data)
+    assert report["ok"] is (not expanded_enabled)
+    assert "detection.open_vocabulary.crop_verifier.model_path" not in report["resources"]
+    assert ("detection.open_vocabulary.model_path" in report["resources"]) is expanded_enabled
+    assert not data.exists()
+
+
+def test_self_check_reports_invalid_config_instead_of_crashing(tmp_path, monkeypatch):
+    config = tmp_path / "configs/spatial_consistent.yaml"
+    config.parent.mkdir()
+    config.write_text("- not-a-mapping\n", encoding="utf-8")
+    monkeypatch.setattr(runtime, "resource_root", lambda: tmp_path)
+    monkeypatch.setattr(runtime, "is_frozen", lambda: False)
+    report = runtime.self_check(tmp_path / "private-data")
+    assert not report["ok"]
+    assert any("config is unavailable or invalid" in error for error in report["errors"])
+
+
 @pytest.mark.parametrize("arguments", [["--port", "65536"], ["--max-frames", "0"]])
 def test_invalid_workspace_parameters_do_not_create_data(tmp_path, arguments):
     data = tmp_path / "data"

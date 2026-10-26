@@ -25,7 +25,18 @@ python -m venv .venv
 
 `prepare_bundle.py` 以白名单拷贝一个 YOLOX ONNX，`scripts/download_yolox.py` 固定模型哈希。字体保留 OFL 原文。`license_manifest.json` 记录实际载荷、第三方来源及随包许可/源码的哈希，`bundle_manifest.json` 只记录程序自己拥有的文件，不含它自身。安装器卸载时逐文件移除自己的载荷，保留额外文件和个人数据；不会递归删除用户选择的安装目录。
 
-可以先使用 `--freeze-only` 生成目录程序，完成验证后使用 `--installer-only` 生成安装器。重建时使用新的构建目录，防止残留旧文件污染载荷。默认安装与数据位置、退出、升级和卸载说明见 [使用指南](../docs/WINDOWS_GUIDE.md)。
+只验证目录程序时不需要 NSIS 或第三方许可压缩包：
+
+```powershell
+.venv\Scripts\python.exe packaging/build_windows.py --freeze-only
+.venv\Scripts\python.exe scripts/smoke_windows_bundle.py
+```
+
+冒烟检查实际冻结程序的原生库、自检、8 帧合成视频的 YOLOX/建图输出，以及坏视频的失败退出码。它只使用生成素材；详细日志留在被 Git 忽略的 `work/windows/smoke-*/`，标准输出仅含无本机路径的结果摘要。源码 CI 与 Windows 冻结构建分别运行，打包依赖升级必须同时通过两项检查。CI 会明确下载并核验固定 YOLOX 模型，不调用视觉 API，不上传测试产物。
+
+`--freeze-only` 和 `--installer-only` 不能同时使用。完成目录程序验证后，可带齐 `--makensis` 和 `--legal-dir` 使用 `--installer-only` 生成安装器。模型在暂存前重新核对公开固定大小与 SHA-256；残留白名单外文件会中止构建，保留现场供检查。重建时使用新的构建目录，防止旧文件污染载荷。默认安装与数据位置、退出、升级和卸载说明见 [使用指南](../docs/WINDOWS_GUIDE.md)。
+
+冻结冒烟不代表安装、升级、卸载、许可更新、安全软件检查或代码签名已完成。它不生成或发布新的 Release；更新打包依赖后，公开分发前仍需重新执行完整发布检查。
 
 第三方压缩包含完整运行时许可、FFmpeg 7.1 及相关依赖源码、OpenCV 对应构建脚本、NSIS/LZMA 源码及条款。以其中的 `legal_sources.json` 为来源记录，构建时重新生成实际文件清单。没有宣称逐位重建 FFmpeg 或历史模型，也没有以自有 MIT 覆盖第三方许可。
 

@@ -58,6 +58,9 @@ node --test tests/frontend/*.cjs
 
 完整回归包含本机回环接口、真实合成视频处理、存储与复核安全边界。测试不需要作者视频、真实 API Key 或付费服务。
 CI 使用固定提交的 GitHub Actions、只读仓库权限和无凭据 checkout，不运行来自 PR 的特权发布脚本。
+另外的 Windows 构建检查会明确下载并校验公开 YOLOX 模型，用真正冻结的程序处理生成视频；步骤及验证边界见 [构建说明](packaging/BUILDING.md)。
+
+下载模型后，可运行 `.venv\Scripts\python.exe -m visualmap --self-check` 检查本机所需资源。源码模式只要求已启用的扩展；YOLOX 使用 OpenCV，不需要额外安装 ONNX Runtime 或 tokenizers。自检不打开视频库，不创建个人数据目录，输出报告中的本机路径应在对外分享前移除。
 
 ## 许可与分发
 

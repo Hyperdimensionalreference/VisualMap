@@ -20,13 +20,17 @@ RELEASE = ROOT / "release"
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--freeze-only", action="store_true")
-    parser.add_argument("--installer-only", action="store_true")
-    parser.add_argument("--makensis", type=Path, required=True)
-    parser.add_argument("--legal-dir", type=Path, required=True)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--freeze-only", action="store_true")
+    mode.add_argument("--installer-only", action="store_true")
+    parser.add_argument("--makensis", type=Path)
+    parser.add_argument("--legal-dir", type=Path)
     args = parser.parse_args()
-    args.makensis = args.makensis.resolve()
-    args.legal_dir = args.legal_dir.resolve()
+    if not args.freeze_only:
+        if args.makensis is None or args.legal_dir is None:
+            parser.error("installer builds require --makensis and --legal-dir")
+        args.makensis = args.makensis.resolve()
+        args.legal_dir = args.legal_dir.resolve()
     OUT.mkdir(parents=True, exist_ok=True)
     RELEASE.mkdir(exist_ok=True)
     if not args.installer_only:
